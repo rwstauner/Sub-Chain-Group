@@ -466,7 +466,7 @@ This module provides an interface for managing multiple
 L<Sub::Chain> instances for a group of fields.
 It is mostly useful for applying a chain of subs
 to a set of data (like a hash or array (like a database record)).
-In addition to calling different L<Sub::Chain>s on specified fields
+In addition to calling different sub chains on specified fields
 It uses L<Set::DynamicGroups> to allow you to build sub chains
 for dynamic groups of fields.
 
