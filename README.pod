@@ -1,0 +1,20 @@
+=head1 Sub::Chain::Group
+
+This module provides an interface for managing multiple
+L<Sub::Chain> instances for a group of fields.
+It is mostly useful for applying a chain of subs
+to a set of data (like a hash or array (like a database record)).
+In addition to calling different sub chains on specified fields
+It uses L<Set::DynamicGroups> to allow you to build sub chains
+for dynamic groups of fields.
+
+See module POD for more information.
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Randy Stauner.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
