@@ -4,27 +4,6 @@ use warnings;
 package Sub::Chain::Group;
 # ABSTRACT: Group chains of subs by field name
 
-=head1 SYNOPSIS
-
-	my $chain = Sub::Chain::Group->new();
-	$chain->append(\&trim, fields => [qw(name address)]);
-	# append other subs to this or other fields as desired...
-	$trimmed = $chain->call(address => ' 123 Street Rd. ');
-
-	# or, using a Sub::Chain subclass:
-
-	my $chain = Sub::Chain::Group->new(
-		chain_class => 'Sub::Chain::Named',
-		chain_args  => {subs => {uc => sub { uc $_[0] } }}
-	);
-	$stack->group(fruits => [qw(apple orange banana)]);
-	$stack->append('uc', groups => 'fruits');
-
-	$uc_fruit = $chain->call({apple => 'green', orange => 'dirty'});
-	# returns a hashref: {apple => 'GREEN', orange => 'DIRTY'}
-
-=cut
-
 use Carp qw(croak carp);
 
 # this seems a little dirty, but it's not appropriate to put it in Sub::Chain
@@ -460,6 +439,33 @@ sub reprocess_queue {
 }
 
 1;
+
+# NOTE: Synopsis tested in t/synopsis.t
+
+=head1 SYNOPSIS
+
+  my $chain = Sub::Chain::Group->new();
+  $chain->append(\&trim, fields => [qw(name address)]);
+
+  # append other subs to this or other fields as desired...
+  my $trimmed = $chain->call(address => ' 123 Street Rd. ');
+
+
+  # or, using a Sub::Chain subclass:
+
+  my $named = Sub::Chain::Group->new(
+    chain_class => 'Sub::Chain::Named',
+    chain_args  => { subs => {
+      uc => sub { uc $_[0] },
+      reverse => sub { reverse $_[0] },
+    }}
+  );
+  $named->group(fruits => [qw(apple orange banana)]);
+  $named->append('uc', groups => 'fruits');
+  $named->append('reverse', fields => 'orange');
+
+  my $fruit = $named->call({apple => 'green', orange => 'dirty'});
+  # returns a hashref: {apple => 'GREEN', orange => 'YTRID'}
 
 =head1 DESCRIPTION
 
