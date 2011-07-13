@@ -1,3 +1,6 @@
+use strict;
+use warnings;
+
 package Sub::Chain::Group;
 # ABSTRACT: Group chains of subs by field name
 
@@ -22,8 +25,6 @@ package Sub::Chain::Group;
 
 =cut
 
-use strict;
-use warnings;
 use Carp qw(croak carp);
 
 # this seems a little dirty, but it's not appropriate to put it in Sub::Chain
@@ -269,7 +270,7 @@ sub chain {
 		if ($self->{warn_no_field}->is_always)
 			|| ($self->{warn_no_field}->is_single && !$opts->{multi});
 
-	return undef;
+	return;
 }
 
 =method dequeue
