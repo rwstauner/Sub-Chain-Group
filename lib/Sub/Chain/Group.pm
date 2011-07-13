@@ -1,3 +1,4 @@
+# vim: set ts=2 sts=2 sw=2 expandtab smarttab:
 use strict;
 use warnings;
 
@@ -15,18 +16,18 @@ use Set::DynamicGroups ();
 use Sub::Chain ();
 
 our %Enums = (
-	warn_no_field => Object::Enum->new({unset => 0, default => 'single',
-		values => [qw(never single always)]}),
+  warn_no_field => Object::Enum->new({unset => 0, default => 'single',
+    values => [qw(never single always)]}),
 );
 
 =method new
 
-	my $chain = Sub::Chain::Group->new(%opts);
+  my $chain = Sub::Chain::Group->new(%opts);
 
-	my $chain = Sub::Chain::Group->new(
-		chain_class => 'Sub::Chain::Named',
-		chain_args  => {subs => {happy => sub { ":-P" } } },
-	);
+  my $chain = Sub::Chain::Group->new(
+    chain_class => 'Sub::Chain::Named',
+    chain_args  => {subs => {happy => sub { ":-P" } } },
+  );
 
 Constructor;  Takes a hash or hashref of options.
 
@@ -71,37 +72,37 @@ The default is C<single>.
 =cut
 
 sub new {
-	my $class = shift;
-	my %opts = ref $_[0] ? %{$_[0]} : @_;
+  my $class = shift;
+  my %opts = ref $_[0] ? %{$_[0]} : @_;
 
-	my $self = {
-		chain_class => delete $opts{chain_class} || 'Sub::Chain',
-		chain_args  => delete $opts{chain_args}  || {},
-		fields => {},
-		groups => Set::DynamicGroups->new(),
-		queue  => [],
-	};
-	while( my ($name, $enum) = each %Enums ){
-		$self->{$name} = $enum->clone(
-			exists $opts{$name} ? delete $opts{$name} : ()
-		);
-	};
-	# remove any other characters
-	$self->{chain_class} =~ s/[^:a-zA-Z0-9_]+//g;
-	eval "require $self->{chain_class}";
+  my $self = {
+    chain_class => delete $opts{chain_class} || 'Sub::Chain',
+    chain_args  => delete $opts{chain_args}  || {},
+    fields => {},
+    groups => Set::DynamicGroups->new(),
+    queue  => [],
+  };
+  while( my ($name, $enum) = each %Enums ){
+    $self->{$name} = $enum->clone(
+      exists $opts{$name} ? delete $opts{$name} : ()
+    );
+  };
+  # remove any other characters
+  $self->{chain_class} =~ s/[^:a-zA-Z0-9_]+//g;
+  eval "require $self->{chain_class}";
 
-	# TODO: warn about remaining unused options?
+  # TODO: warn about remaining unused options?
 
-	bless $self, $class;
+  bless $self, $class;
 }
 
 =method append
 
-	$chain->append($sub, %options); # or \%options
-	$chain->append(\&trim,  fields => [qw(fld1 fld2)]);
-	$chain->append(\&trim,  field  => 'col3', opts => {on_undef => 'blank'});
-	# or, if using Sub::Chain::Named
-	$chain->append('match', groups => 'group1', args => ['pattern']);
+  $chain->append($sub, %options); # or \%options
+  $chain->append(\&trim,  fields => [qw(fld1 fld2)]);
+  $chain->append(\&trim,  field  => 'col3', opts => {on_undef => 'blank'});
+  # or, if using Sub::Chain::Named
+  $chain->append('match', groups => 'group1', args => ['pattern']);
 
 Append a sub onto the chain
 for the specified fields and/or groups.
@@ -126,20 +127,20 @@ it will be converted to an arrayref.
 =cut
 
 sub append {
-	my ($self, $sub) = (shift, shift);
-	my %opts = ref $_[0] ? %{$_[0]} : @_;
+  my ($self, $sub) = (shift, shift);
+  my %opts = ref $_[0] ? %{$_[0]} : @_;
 
-	CORE::push(@{ $self->{queue} ||= [] },
-		[$sub, $self->_normalize_spec(\%opts)]);
+  CORE::push(@{ $self->{queue} ||= [] },
+    [$sub, $self->_normalize_spec(\%opts)]);
 
-	return $self;
+  return $self;
 }
 
 =method call
 
-	my $values = $chain->call({key => 'value', ...});
-	my $values = $chain->call([qw(fields)], [qw(values)]);
-	my $value  = $chain->call('address', '123 Street Road');
+  my $values = $chain->call({key => 'value', ...});
+  my $values = $chain->call([qw(fields)], [qw(values)]);
+  my $value  = $chain->call('address', '123 Street Road');
 
 Call the sub chain appropriate for each field of the supplied data.
 
@@ -153,11 +154,11 @@ it will be looped over
 and a hash ref of result data will be returned.
 For example:
 
-	# for use with DBI
-	$sth->execute;
-	while( my $hash = $sth->fetchrow_hashref() ){
-		my $new_hash = $chain->call($hash);
-	}
+  # for use with DBI
+  $sth->execute;
+  while( my $hash = $sth->fetchrow_hashref() ){
+    my $new_hash = $chain->call($hash);
+  }
 
 * arrayref => arrayref
 If two array refs are supplied,
@@ -165,11 +166,11 @@ the first should be a list of field names,
 and the second the corresponding data.
 For example:
 
-	# for use with Text::CSV
-	my $header = $csv->getline($io);
-	while( my $array = $csv->getline($io) ){
-		my $new_array = $chain->call($header, $array);
-	}
+  # for use with Text::CSV
+  my $header = $csv->getline($io);
+  while( my $array = $csv->getline($io) ){
+    my $new_array = $chain->call($header, $array);
+  }
 
 * string, scalar => scalar
 If two arguments are given,
@@ -179,77 +180,77 @@ and the second argument the data.
 The return value will be the data after it has been
 passed through the chain.
 
-	# simple data
-	my $trimmed = $chain->call('spaced', '  lots of space   ');
+  # simple data
+  my $trimmed = $chain->call('spaced', '  lots of space   ');
 
 =end :list
 
 =cut
 
 sub call {
-	my ($self) = shift;
+  my ($self) = shift;
 
-	$self->dequeue
-		if $self->{queue};
+  $self->dequeue
+    if $self->{queue};
 
-	my $out;
-	my $opts = {multi => 1};
-	my $ref = ref $_[0];
+  my $out;
+  my $opts = {multi => 1};
+  my $ref = ref $_[0];
 
-	if( $ref eq 'HASH' ){
-		my %in = %{$_[0]};
-		$out = {};
-		while( my ($key, $value) = each %in ){
-			$out->{$key} = $self->_call_one($key, $value, $opts);
-		}
-	}
-	elsif( $ref eq 'ARRAY' ){
-		my @fields = @{$_[0]};
-		my @data   = @{$_[1]};
-		$out = [];
-		foreach my $i ( 0 .. $#fields ){
-			CORE::push(@$out,
-				$self->_call_one($fields[$i], $data[$i], $opts));
-		}
-	}
-	else {
-		$out = $self->_call_one($_[0], $_[1]);
-	}
+  if( $ref eq 'HASH' ){
+    my %in = %{$_[0]};
+    $out = {};
+    while( my ($key, $value) = each %in ){
+      $out->{$key} = $self->_call_one($key, $value, $opts);
+    }
+  }
+  elsif( $ref eq 'ARRAY' ){
+    my @fields = @{$_[0]};
+    my @data   = @{$_[1]};
+    $out = [];
+    foreach my $i ( 0 .. $#fields ){
+      CORE::push(@$out,
+        $self->_call_one($fields[$i], $data[$i], $opts));
+    }
+  }
+  else {
+    $out = $self->_call_one($_[0], $_[1]);
+  }
 
-	return $out;
+  return $out;
 }
 
 sub _call_one {
-	my ($self, $field, $value, $opts) = @_;
-	return $value
-		unless my $chain = $self->chain($field, $opts);
-	return $chain->call($value);
+  my ($self, $field, $value, $opts) = @_;
+  return $value
+    unless my $chain = $self->chain($field, $opts);
+  return $chain->call($value);
 }
 
 =method chain
 
-	$chain->chain($field);
+  $chain->chain($field);
 
 Return the sub chain for the given field name.
 
 =cut
 
 sub chain {
-	my ($self, $name, $opts) = @_;
-	$opts ||= {};
+  my ($self, $name, $opts) = @_;
+  $opts ||= {};
 
-	$self->dequeue
-		if $self->{queue};
+  $self->dequeue
+    if $self->{queue};
 
-	if( my $chain = $self->{fields}{$name} ){
-		return $chain;
-	}
+  if( my $chain = $self->{fields}{$name} ){
+    return $chain;
+  }
 
-	carp("No subs chained for '$name'")
-		if ($self->{warn_no_field}->is_always)
-			|| ($self->{warn_no_field}->is_single && !$opts->{multi});
+  carp("No subs chained for '$name'")
+    if ($self->{warn_no_field}->is_always)
+      || ($self->{warn_no_field}->is_single && !$opts->{multi});
 
-	return;
+  return;
 }
 
 =method dequeue
@@ -266,45 +267,45 @@ from the chain and there are still specifications in the queue
 =cut
 
 sub dequeue {
-	my ($self) = @_;
+  my ($self) = @_;
 
-	return unless my $queue = $self->{queue};
-	my $dequeued = ($self->{dequeued} ||= []);
+  return unless my $queue = $self->{queue};
+  my $dequeued = ($self->{dequeued} ||= []);
 
-	# shift items off the queue until they've all been processed
-	while( my $item = shift @$queue ){
-		# save this item in case we need to reprocess the whole queue later
-		CORE::push(@$dequeued, $item);
+  # shift items off the queue until they've all been processed
+  while( my $item = shift @$queue ){
+    # save this item in case we need to reprocess the whole queue later
+    CORE::push(@$dequeued, $item);
 
-		my ($sub, $opts) = @$item;
+    my ($sub, $opts) = @$item;
 
-		my $fields = $opts->{fields} || [];
-		# keep fields unique
-		my %seen = map { $_ => 1 } @$fields;
-		# add unique fields from groups (if there are any)
-		if( my $groups = $opts->{groups} ){
-			CORE::push(@$fields, grep { !$seen{$_}++ }
-				map { @$_ } values %{ $self->{groups}->groups(@$groups) }
-			);
-		}
+    my $fields = $opts->{fields} || [];
+    # keep fields unique
+    my %seen = map { $_ => 1 } @$fields;
+    # add unique fields from groups (if there are any)
+    if( my $groups = $opts->{groups} ){
+      CORE::push(@$fields, grep { !$seen{$_}++ }
+        map { @$_ } values %{ $self->{groups}->groups(@$groups) }
+      );
+    }
 
-		# create a single instance of the sub
-		# and copy its reference to the various stacks
-		foreach my $field ( @$fields ){
-			($self->{fields}->{$field} ||= $self->new_sub_chain())
-				->append($sub, @$opts{qw(args opts)});
-		}
-	}
-	# let 'queue' return false so we can do simple 'if queue' checks
-	delete $self->{queue};
+    # create a single instance of the sub
+    # and copy its reference to the various stacks
+    foreach my $field ( @$fields ){
+      ($self->{fields}->{$field} ||= $self->new_sub_chain())
+        ->append($sub, @$opts{qw(args opts)});
+    }
+  }
+  # let 'queue' return false so we can do simple 'if queue' checks
+  delete $self->{queue};
 
-	# what would be a good return value?
-	return;
+  # what would be a good return value?
+  return;
 }
 
 =method fields
 
-	$chain->fields(@fields);
+  $chain->fields(@fields);
 
 Add fields to the list of all known fields.
 This tells the object which fields are available or expected
@@ -312,12 +313,12 @@ which can be useful for specifying groups based on exclusions.
 
 For example:
 
-	$chain->group(some => {not => [qw(primary secondary)]});
-	$chain->fields(qw(primary secondary this that));
-	# the 'some' group will now contain ['this', 'that']
+  $chain->group(some => {not => [qw(primary secondary)]});
+  $chain->fields(qw(primary secondary this that));
+  # the 'some' group will now contain ['this', 'that']
 
-	$chain->fields('another');
-	# the 'some' group will now contain ['this', 'that', 'another']
+  $chain->fields('another');
+  # the 'some' group will now contain ['this', 'that', 'another']
 
 This is a convenience method.
 Arguments are passed to L<Set::DynamicGroups/add_items>.
@@ -325,16 +326,16 @@ Arguments are passed to L<Set::DynamicGroups/add_items>.
 =cut
 
 sub fields {
-	my ($self) = shift;
-	$self->{groups}->add_items(@_);
-	$self->reprocess_queue
-		if $self->{dequeued};
-	return $self;
+  my ($self) = shift;
+  $self->{groups}->add_items(@_);
+  $self->reprocess_queue
+    if $self->{dequeued};
+  return $self;
 }
 
 =method group
 
-	$chain->group(groupname => [qw(fields)]);
+  $chain->group(groupname => [qw(fields)]);
 
 Add fields to the specified group name.
 
@@ -344,19 +345,19 @@ Arguments are passed to L<Set::DynamicGroups/add>.
 =cut
 
 sub group {
-	my ($self) = shift;
-	croak("group() takes argument pairs.  Did you mean groups()?")
-		if !@_;
+  my ($self) = shift;
+  croak("group() takes argument pairs.  Did you mean groups()?")
+    if !@_;
 
-	$self->{groups}->add(@_);
-	$self->reprocess_queue
-		if $self->{dequeued};
-	return $self;
+  $self->{groups}->add(@_);
+  $self->reprocess_queue
+    if $self->{dequeued};
+  return $self;
 }
 
 =method groups
 
-	my $set_dg = $chain->groups();
+  my $set_dg = $chain->groups();
 
 Return the object's instance of L<Set::DynamicGroups>.
 
@@ -366,11 +367,11 @@ of the groups than is available through the L</group> and L</fields> methods.
 =cut
 
 sub groups {
-	my ($self) = shift;
-	croak("groups() takes no arguments.  Did you mean group()?")
-		if @_;
+  my ($self) = shift;
+  croak("groups() takes no arguments.  Did you mean group()?")
+    if @_;
 
-	return $self->{groups};
+  return $self->{groups};
 }
 
 =method new_sub_chain
@@ -381,41 +382,41 @@ using the C<chain_class> and C<chain_args> options.
 =cut
 
 sub new_sub_chain {
-	my ($self) = @_;
-	return $self->{chain_class}->new($self->{chain_args});
+  my ($self) = @_;
+  return $self->{chain_class}->new($self->{chain_args});
 }
 
 sub _normalize_spec {
-	my ($self, $opts) = @_;
+  my ($self, $opts) = @_;
 
-	# Don't alter \%opts.  Limit %norm to desired keys.
-	my %norm;
-	my %aliases = (
-		arguments => 'args',
-		options   => 'opts',
-		field     => 'fields',
-		group     => 'groups',
-	);
-	while( my ($alias, $name) = each %aliases ){
-		# store the alias in the actual key
-		# overwrite with actual key if specified
-		foreach my $key ( $alias, $name ){
-			$norm{$name} = $opts->{$key}
-				if exists  $opts->{$key};
-		}
-	}
+  # Don't alter \%opts.  Limit %norm to desired keys.
+  my %norm;
+  my %aliases = (
+    arguments => 'args',
+    options   => 'opts',
+    field     => 'fields',
+    group     => 'groups',
+  );
+  while( my ($alias, $name) = each %aliases ){
+    # store the alias in the actual key
+    # overwrite with actual key if specified
+    foreach my $key ( $alias, $name ){
+      $norm{$name} = $opts->{$key}
+        if exists  $opts->{$key};
+    }
+  }
 
-	# allow a single string and convert it to an arrayref
-	foreach my $type ( qw(fields groups) ){
-		$norm{$type} = [$norm{$type}]
-			if exists($norm{$type}) && !ref($norm{$type});
-	}
+  # allow a single string and convert it to an arrayref
+  foreach my $type ( qw(fields groups) ){
+    $norm{$type} = [$norm{$type}]
+      if exists($norm{$type}) && !ref($norm{$type});
+  }
 
-	# simplify code later by initializing these to refs
-	$norm{args} ||= [];
-	$norm{opts} ||= {};
+  # simplify code later by initializing these to refs
+  $norm{args} ||= [];
+  $norm{opts} ||= {};
 
-	return \%norm;
+  return \%norm;
 }
 
 =method reprocess_queue
@@ -429,13 +430,13 @@ after the queue was initially processed.
 =cut
 
 sub reprocess_queue {
-	my ($self) = @_;
-	return unless my $dequeued = delete $self->{dequeued};
+  my ($self) = @_;
+  return unless my $dequeued = delete $self->{dequeued};
 
-	# reset the queue and the stacks so that it will all be rebuilt
-	$self->{queue}  = [@$dequeued, @{ $self->{queue} || [] } ];
-	$self->{fields} = {};
-	# but don't actually rebuild it until necessary
+  # reset the queue and the stacks so that it will all be rebuilt
+  $self->{queue}  = [@$dequeued, @{ $self->{queue} || [] } ];
+  $self->{fields} = {};
+  # but don't actually rebuild it until necessary
 }
 
 1;
