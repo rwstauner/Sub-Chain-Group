@@ -2,6 +2,8 @@ Revision history for Sub::Chain::Group
 
 {{$NEXT}}
 
+0.012     2011-07-15T00:19:37Z
+
   - Documentation fixes
   - Superficial dist/release changes
 
