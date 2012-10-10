@@ -9,7 +9,10 @@ use Carp qw(croak carp);
 
 # this seems a little dirty, but it's not appropriate to put it in Sub::Chain
 use Sub::Chain;
+{
+  no warnings 'once';
 push(@Sub::Chain::CARP_NOT, __PACKAGE__);
+}
 
 use Set::DynamicGroups ();
 use Sub::Chain ();
