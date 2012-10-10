@@ -2,6 +2,7 @@ Revision history for Sub::Chain::Group
 
 {{$NEXT}}
 
+  - Use the lightweight Module::Load instead of error-prone eval("require ...")
   - Replace Object::Enum with simple string comparisons
 
 0.012     2011-07-15T00:19:37Z

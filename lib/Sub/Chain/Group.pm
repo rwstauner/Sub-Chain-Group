@@ -15,7 +15,7 @@ push(@Sub::Chain::CARP_NOT, __PACKAGE__);
 }
 
 use Set::DynamicGroups ();
-use Sub::Chain ();
+use Module::Load ();
 
 =method new
 
@@ -92,9 +92,7 @@ sub new {
     }
   }
 
-  # remove any other characters
-  $self->{chain_class} =~ s/[^:a-zA-Z0-9_]+//g;
-  eval "require $self->{chain_class}";
+  Module::Load::load($self->{chain_class});
 
   # TODO: warn about remaining unused options?
 
