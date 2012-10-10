@@ -96,10 +96,9 @@ SKIP: {
   warning_is(sub { $chain->call({'green', 'orange'}) }, undef, 'no warn multi');
 
   no strict 'refs';
-  my %enums = %{"${mod}::Enums"};
-  $chain->{warn_no_field} = $enums{warn_no_field}->clone('always');
+  $chain->{warn_no_field} = 'always';
   warning_is(sub { $chain->call({'green', 'orange'}) }, q/No subs chained for 'green'/, 'warn always');
-  $chain->{warn_no_field} = $enums{warn_no_field}->clone('never');
+  $chain->{warn_no_field} = 'never';
   warning_is(sub { $chain->call( 'green', 'orange' ) }, undef, 'warn never');
 }
 

@@ -11,14 +11,8 @@ use Carp qw(croak carp);
 use Sub::Chain;
 push(@Sub::Chain::CARP_NOT, __PACKAGE__);
 
-use Object::Enum 0.072 ();
 use Set::DynamicGroups ();
 use Sub::Chain ();
-
-our %Enums = (
-  warn_no_field => Object::Enum->new({unset => 0, default => 'single',
-    values => [qw(never single always)]}),
-);
 
 =method new
 
@@ -81,12 +75,20 @@ sub new {
     fields => {},
     groups => Set::DynamicGroups->new(),
     queue  => [],
+    warn_no_field => 'single',
   };
-  while( my ($name, $enum) = each %Enums ){
-    $self->{$name} = $enum->clone(
-      exists $opts{$name} ? delete $opts{$name} : ()
-    );
-  };
+
+  foreach my $enum (
+    [warn_no_field => qw(never single always)],
+  ){
+    my ($key, @vals) = @$enum;
+    if( my $val = delete $opts{ $key } ){
+      croak qq['$key' cannot be set to '$val'; must be one of: ] . join(', ', @vals)
+        unless grep { $val eq $_ } @vals;
+      $self->{ $key } = $val;
+    }
+  }
+
   # remove any other characters
   $self->{chain_class} =~ s/[^:a-zA-Z0-9_]+//g;
   eval "require $self->{chain_class}";
@@ -247,8 +249,8 @@ sub chain {
   }
 
   carp("No subs chained for '$name'")
-    if ($self->{warn_no_field}->is_always)
-      || ($self->{warn_no_field}->is_single && !$opts->{multi});
+    if $self->{warn_no_field} eq 'always'
+      || ($self->{warn_no_field} eq 'single' && !$opts->{multi});
 
   return;
 }
