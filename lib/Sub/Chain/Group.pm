@@ -78,6 +78,7 @@ sub new {
     fields => {},
     groups => Set::DynamicGroups->new(),
     queue  => [],
+    hooks  => {},
     warn_no_field => 'single',
   };
 
@@ -200,24 +201,33 @@ sub call {
   my $opts = {multi => 1};
   my $ref = ref $_[0];
 
+  my ($before, $after) = @{ $self->{hooks} }{qw( before after )};
+
   if( $ref eq 'HASH' ){
-    my %in = %{$_[0]};
+    my $in = { %{ $_[0] } };
+    $in = $before->call($in)  if $before;
     $out = {};
-    while( my ($key, $value) = each %in ){
+    while( my ($key, $value) = each %$in ){
       $out->{$key} = $self->_call_one($key, $value, $opts);
     }
+    $out = $after->call($out) if $after;
   }
   elsif( $ref eq 'ARRAY' ){
-    my @fields = @{$_[0]};
-    my @data   = @{$_[1]};
+    my $fields = [ @{ $_[0] } ];
+    my $values = [ @{ $_[1] } ];
+    $values = $before->call($values, $fields) if $before;
     $out = [];
-    foreach my $i ( 0 .. $#fields ){
+    foreach my $i ( 0 .. @$fields - 1 ){
       CORE::push(@$out,
-        $self->_call_one($fields[$i], $data[$i], $opts));
+        $self->_call_one($fields->[$i], $values->[$i], $opts));
     }
+    $out = $after->call($out, $fields) if $after;
   }
   else {
-    $out = $self->_call_one($_[0], $_[1]);
+    my ($key, $val) = @_;
+    $val = $before->call($val) if $before;
+    $out = $self->_call_one($key, $val);
+    $out = $after->call($out)  if $after;
   }
 
   return $out;
@@ -281,6 +291,12 @@ sub dequeue {
     CORE::push(@$dequeued, $item);
 
     my ($sub, $opts) = @$item;
+    my @chain_args = ($sub, @$opts{qw(args opts)});
+
+    foreach my $hook ( @{ $opts->{hooks} || [] } ){
+      ($self->{hooks}->{ $hook } ||= $self->new_sub_chain())
+        ->append(@chain_args);
+    }
 
     my $fields = $opts->{fields} || [];
     # keep fields unique
@@ -292,11 +308,9 @@ sub dequeue {
       );
     }
 
-    # create a single instance of the sub
-    # and copy its reference to the various stacks
     foreach my $field ( @$fields ){
       ($self->{fields}->{$field} ||= $self->new_sub_chain())
-        ->append($sub, @$opts{qw(args opts)});
+        ->append(@chain_args);
     }
   }
   # let 'queue' return false so we can do simple 'if queue' checks
@@ -399,7 +413,9 @@ sub _normalize_spec {
     options   => 'opts',
     field     => 'fields',
     group     => 'groups',
+    hook      => 'hooks',
   );
+
   while( my ($alias, $name) = each %aliases ){
     # store the alias in the actual key
     # overwrite with actual key if specified
@@ -410,7 +426,7 @@ sub _normalize_spec {
   }
 
   # allow a single string and convert it to an arrayref
-  foreach my $type ( qw(fields groups) ){
+  foreach my $type ( qw(fields groups hooks) ){
     $norm{$type} = [$norm{$type}]
       if exists($norm{$type}) && !ref($norm{$type});
   }
@@ -439,6 +455,7 @@ sub reprocess_queue {
   # reset the queue and the stacks so that it will all be rebuilt
   $self->{queue}  = [@$dequeued, @{ $self->{queue} || [] } ];
   $self->{fields} = {};
+  $self->{hooks}  = {};
   # but don't actually rebuild it until necessary
 }
 
