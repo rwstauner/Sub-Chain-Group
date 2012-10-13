@@ -1,7 +1,7 @@
 # vim: set ts=2 sts=2 sw=2 expandtab smarttab:
 use strict;
 use warnings;
-use Test::More 0.96;
+use Test::More 0.88;
 
 eval 'require Test::Synopsis'
   or plan skip_all => 'Test::Synopsis required for this test';
