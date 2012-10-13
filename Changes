@@ -2,6 +2,8 @@ Revision history for Sub::Chain::Group
 
 {{$NEXT}}
 
+0.013     2012-10-13T22:06:52Z
+
   - Enable before/after hooks that operate on the input record as a whole
   - Use the lightweight Module::Load instead of error-prone eval("require ...")
   - Replace Object::Enum with simple string comparisons
