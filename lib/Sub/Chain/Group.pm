@@ -43,6 +43,14 @@ Here you can set alternate default values (see L<Sub::Chain/OPTIONS>)
 or, for example, include the C<subs> parameter
 if you're using L<Sub::Chain::Named>.
 
+* C<hook_as_hash>
+Normally hooks are called with the data structures
+passed in (hash refs, array refs, or strings).
+If this option is enabled (set to a true value)
+hooks will be called with a hashref instead (derived from the input data)
+to enable simpler more consistent hook functions.
+See L</HOOKS> for more information.
+
 * C<warn_no_field>
 Whether or not to emit a warning if asked to call a sub chain on a field
 but no subs were specified for that field
@@ -79,6 +87,7 @@ sub new {
     groups => Set::DynamicGroups->new(),
     queue  => [],
     hooks  => {},
+    hook_as_hash  => delete $opts{hook_as_hash},
     warn_no_field => 'single',
   };
 
@@ -215,22 +224,45 @@ sub call {
   elsif( $ref eq 'ARRAY' ){
     my $fields = [ @{ $_[0] } ];
     my $values = [ @{ $_[1] } ];
-    $values = $before->call($values, $fields) if $before;
+    $values = $self->_call_hook($before, $values, $fields) if $before;
     $out = [];
     foreach my $i ( 0 .. @$fields - 1 ){
       CORE::push(@$out,
         $self->_call_one($fields->[$i], $values->[$i], $opts));
     }
-    $out = $after->call($out, $fields) if $after;
+    $out = $self->_call_hook($after, $out, $fields) if $after;
   }
   else {
     my ($key, $val) = @_;
-    $val = $before->call($val) if $before;
+    $val = $self->_call_hook($before, $val, $key) if $before;
     $out = $self->_call_one($key, $val);
-    $out = $after->call($out)  if $after;
+    $out = $self->_call_hook($after,  $out, $key) if $after;
   }
 
   return $out;
+}
+
+sub _call_hook {
+  my ($self, $chain, $values, $fields) = @_;
+
+  if( $self->{hook_as_hash} ){
+    if( ref($fields) eq 'ARRAY' ){
+      my $hash = {};
+      @$hash{ @$fields } = @$values;
+      $hash = $chain->call($hash);
+      $values = [ @$hash{ @$fields } ];
+    }
+    else {
+      my $hash = { $fields => $values };
+      $hash = $chain->call($hash);
+      $values = $hash->{ $fields };
+    }
+  }
+  else {
+    $values = $chain->call($values, $fields);
+  }
+
+  return $values;
 }
 
 sub _call_one {
@@ -535,6 +567,26 @@ as the first argument.
   $chain->call([qw(a b c), [1, 2, 3]);
   # sub will receive: ([1, 2, 3], [qw(a b c)])
   # and should return an array ref of (possibly modified) values
+
+You can also set C<< hook_as_hash => 1 >> in the constructor
+which will use the two input arrays to build a hash ref,
+pass the hash ref to any hook subs
+(which should return a hash ref),
+and in the end return an array ref of the fields of that hash ref
+preserving the order of the original array ref.
+This can be simpler to work with in the sub
+(and enable using the same sub regardless of the input type).
+
+  $chain->call([qw(a b c)], [1, 2, 3]);
+  # sub will receive: ({a => 1, b => 2, c => 3})
+  # and should return a (possibly modified) hash ref.
+
+If a simple string key is passed to L</call>
+the hooks will be called with the value as the first argument
+and the field name as the second (similar to the way array refs are handled).
+The C<hook_as_hash> option will also work here;
+A hashref will be passed to the hooks
+and ultimately return the single value.
 
 B<Note>:
 A shallow clone is performed on the ref(s) (but not a deep clone)
