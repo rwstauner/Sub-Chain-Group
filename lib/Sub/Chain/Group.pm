@@ -115,18 +115,18 @@ Possible options:
 
 =for :list
 * C<fields> (or C<field>)
-An arrayref of field names
+Field name(s) (string or array ref)
 * C<groups> (or C<group>)
-An arrayref of group names
+Group name(s) (string or array ref)
+* C<hooks> (or C<hook>)
+Valid values: C<before>, C<after> (string or array ref)
+See L</HOOKS> for explanation.
 * C<args> (or C<arguments>)
 An arrayref of arguments to pass to the sub
 (see L<Sub::Chain/append>)
 * C<opts> (or C<options>)
 A hashref of options for the sub
 (see L<Sub::Chain/OPTIONS>)
-
-If a single string is provided for C<fields> or C<groups>
-it will be converted to an arrayref.
 
 =cut
 
@@ -497,6 +497,49 @@ to a set of data (like a hash or array (like a database record)).
 In addition to calling different sub chains on specified fields
 It uses L<Set::DynamicGroups> to allow you to build sub chains
 for dynamic groups of fields.
+
+=head1 HOOKS
+
+In addition to building sub chains for specific fields (or groups)
+there are also hooks available to process the input as a whole
+(the hash ref or array refs passed to L</call>).
+
+Specify C<< hook => 'before' >> (or C<< hook => 'after' >>)
+when calling L</append> (instead of specifying C<fields> or C<groups>)
+and the provided sub will be appended to a chain that will be able to
+modify the input record as a whole before (or after)
+the sub chains are called for each field.
+
+These can modify the input by updating (or even adding new) fields:
+
+  sub debug_hash {
+    my $h = shift;
+    $h->{debug} = join ':', keys %$h;
+    return $h;
+  }
+
+  $chain->append(\&debug_hash, hook => 'before');
+
+The sub should return the (modified) data structure
+for consistency with other chained subs.
+
+When passing a hash ref to L</call>
+the hash ref will be passed to the hook (as shown above).
+
+If two array refs are passed to L</call>
+the array ref of values will be passed to the hook as the first argument
+and the array ref of keys will be passed as the second argument.
+This is consistent with all other chained subs that receive their value
+as the first argument.
+
+  $chain->call([qw(a b c), [1, 2, 3]);
+  # sub will receive: ([1, 2, 3], [qw(a b c)])
+  # and should return an array ref of (possibly modified) values
+
+B<Note>:
+A shallow clone is performed on the ref(s) (but not a deep clone)
+so it's up to you to determine if modifying the structures in the hooks
+is acceptable or if you need to do a deep clone.
 
 =for stopwords TODO
 
