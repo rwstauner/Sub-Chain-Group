@@ -3,15 +3,15 @@ use strict;
 use warnings;
 use Test::More 0.88;
 
-eval 'require Test::Synopsis'
-  or plan skip_all => 'Test::Synopsis required for this test';
-
 use Sub::Chain::Group ();
 my $pm = $INC{'Sub/Chain/Group.pm'};
-my ($synopsis, $line, @option) = Test::Synopsis::extract_synopsis($pm);
+my ($synopsis) = do {
+  open my $fh, '<', $pm or die "failed to open $pm: $!";
+  do { local $/; <$fh>; } =~ /\n=head1 SYNOPSIS\n(.+?)\n=\w+/s;
+};
+
 $synopsis = join ";\n",
   'sub trim { local $_ = shift; s/^\s+//; s/\s+$//; $_ }',
-  @option,
   $synopsis;
 
 my @tests = split /\n/, <<'TESTS';
@@ -22,4 +22,4 @@ TESTS
 plan tests => scalar @tests;
 
 eval join("\n", $synopsis, @tests);
-die $@ if $@;
+die "$@\ncode:\n\n$synopsis\n\n" if $@;
