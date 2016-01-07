@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/rwstauner/Sub-Chain-Group.svg?branch=master)](https://travis-ci.org/rwstauner/Sub-Chain-Group)
+[![Coverage Status](https://coveralls.io/repos/rwstauner/Sub-Chain-Group/badge.svg?branch=master)](https://coveralls.io/r/rwstauner/Sub-Chain-Group?branch=master)
+[![Kwalitee status](http://cpants.cpanauthors.org/dist/Sub-Chain-Group.png)](http://cpants.charsbar.org/dist/overview/Sub-Chain-Group)
+
 # NAME
 
 Sub::Chain::Group - Group chains of subs by field name
@@ -339,7 +343,7 @@ in addition to those websites please use your favorite search engine to discover
 ## Bugs / Feature Requests
 
 Please report any bugs or feature requests by email to `bug-sub-chain-group at rt.cpan.org`, or through
-the web interface at [http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Sub-Chain-Group](http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Sub-Chain-Group). You will be automatically notified of any
+the web interface at [https://rt.cpan.org/Public/Bug/Report.html?Queue=Sub-Chain-Group](https://rt.cpan.org/Public/Bug/Report.html?Queue=Sub-Chain-Group). You will be automatically notified of any
 progress on the request by the system.
 
 ## Source Code
@@ -350,7 +354,7 @@ progress on the request by the system.
 
 # AUTHOR
 
-Randy Stauner <rwstauner@cpan.org>
+Randy Stauner &lt;rwstauner@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
